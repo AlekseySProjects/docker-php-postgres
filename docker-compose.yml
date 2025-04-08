@@ -1,0 +1,66 @@
+services:
+    nginx:
+        image: nginx:latest
+        volumes:
+            - ./nginx:/etc/nginx/conf.d
+            - ./data:/var/www/html
+            - ./logs/nginx:/var/log/nginx
+        ports:
+            - "80:80"
+        links:
+            - "php:app"
+
+    php:
+        depends_on:
+            - db
+        build:
+            context: .
+            args:
+                - USER_UID=1000
+                - USER_GID=1000
+        user: "1000"
+        volumes:
+            - ./data:/var/www/html
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        restart: unless-stopped
+        working_dir: /var/www/html
+        links:
+            - "db:database"
+
+    db:
+        image: postgres:17
+        restart: always
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: sampledb
+        ports:
+          - '5432:5432'
+        volumes: 
+          - app-db-data:/var/lib/postgresql/data
+          # - ./seed.sql:/docker-entrypoint-initdb.d
+
+        # # MySQL
+        # image: mysql:8
+        # restart: unless-stopped
+        # command: --mysql-native-password=ON
+        # volumes:
+        #     - app-db-data:/var/lib/mysql
+        # environment:
+        #     MYSQL_DATABASE: 'example'
+        #     MYSQL_USER: 'example'
+        #     MYSQL_PASSWORD: 'example'
+        #     MYSQL_ROOT_PASSWORD: 'example'
+
+    adminer:
+        image: adminer
+        restart: always
+        ports:
+          - 8080:8080
+volumes:
+    app-db-data:
+
+networks:
+    default:
+        driver: bridge
