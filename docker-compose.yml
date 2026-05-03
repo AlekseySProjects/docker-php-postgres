@@ -21,6 +21,7 @@ services:
         user: "1000"
         volumes:
             - ./data:/var/www/html
+            - vscode-server:/home/www-data/.vscode-server
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         restart: unless-stopped
@@ -60,6 +61,7 @@ services:
           - 8080:8080
 volumes:
     app-db-data:
+    vscode-server:
 
 networks:
     default:

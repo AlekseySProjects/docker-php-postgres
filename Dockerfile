@@ -1,6 +1,6 @@
 FROM node:22 AS node
 FROM composer:2 AS composer
-FROM php:8.3-fpm
+FROM php:8.4-fpm-bookworm
 
 RUN apt update && apt install -y git \
 		libpq-dev \
@@ -11,7 +11,7 @@ RUN apt update && apt install -y git \
 RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql
 RUN docker-php-ext-install pdo pdo_pgsql
 
-RUN curl -L https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/releases/download/v3.66.0/php-cs-fixer.phar -o php-cs-fixer && \
+RUN curl -L https://cs.symfony.com/download/php-cs-fixer-v3.phar -o php-cs-fixer && \
 	chmod a+x php-cs-fixer && \
 	mv php-cs-fixer /usr/local/bin/php-cs-fixer
 
@@ -36,5 +36,14 @@ ENV SHELL /bin/bash
 RUN deluser --remove-home www-data && \
     addgroup --system --gid ${USER_GID} www-data && \
     adduser --uid ${USER_UID} --system --home /home/www-data --ingroup www-data www-data
+
+USER www-data
+
+# Laravel installer
+RUN composer global require laravel/installer
+RUN echo 'export PATH=~/.composer/vendor/bin:$PATH' > ~/.bashrc
+
+RUN mkdir -p /home/www-data/.vscode-server && \
+    chown -R ${USER_UID}:${USER_GID} /home/www-data/.vscode-server
 
 WORKDIR /var/www/html
